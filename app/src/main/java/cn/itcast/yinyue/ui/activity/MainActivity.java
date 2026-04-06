@@ -97,14 +97,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        connectionManager.bindService(this, MusicService.class);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         try {
             if (connectionManager != null) {
+                connectionManager.unbindService(this);
                 connectionManager.release();
             }
-            Intent intent = new Intent(this, MusicService.class);
-            stopService(intent);
+//            Intent intent = new Intent(this, MusicService.class);
+//            stopService(intent);
         } catch (Exception e) {
             Log.e(TAG, "onDestroy: ",e);
         }

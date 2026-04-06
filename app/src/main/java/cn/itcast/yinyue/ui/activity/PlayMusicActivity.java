@@ -70,6 +70,15 @@ public class PlayMusicActivity extends AppCompatActivity {
             public void onServiceConnected(MusicService service) {
                 //在回调方法中获取具体服务
                 musicService = connectionManager.getService();
+
+                //TODO:完善第二次打开页面的播放逻辑
+                if (service.getURL() == null |
+                        !service.getURL().equals(url) |
+                        service.getPlayState() == MusicService.IDLE){
+                    service.stopMusic();
+                    service.playMusic(url);
+                }
+
                 /**
                  * 调用MusicService的方法设置MediaPlayer监听事件
                  * 实现OnMusicStateListener的回调方法
@@ -98,9 +107,6 @@ public class PlayMusicActivity extends AppCompatActivity {
                  * service.isPlaying()状态暂停或者继续播放
                  */
                 play.setOnClickListener(view1 -> {
-                    if (service.getPlayState() == MusicService.IDLE){
-                        service.playMusic(url);
-                    }
                     if (service.isPlaying()){
                         service.pauseMusic();   //暂停播放
                     }else {

@@ -8,11 +8,17 @@ import android.os.IBinder;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class MusicService extends Service {
     private static final String TAG = "MusicService";
     private final BaseServiceBinder<MusicService> binder = new BaseServiceBinder<>(this);
     MediaPlayer mediaPlayer;
+
+    String URL;
+    public String getURL() {
+        return URL;
+    }
     OnMusicStateListener mStateListener;
 
     public static final int IDLE = 0;     // 空闲
@@ -81,10 +87,11 @@ public class MusicService extends Service {
 
     public void playMusic(String path) {
         if (mediaPlayer == null) return;
-
+        if (path.equals(URL)) return;
+        URL = path;
         try {
             mediaPlayer.reset();
-            mediaPlayer.setDataSource(path);
+            mediaPlayer.setDataSource(URL);
             mediaPlayer.prepareAsync();
         } catch (IOException e) {
             e.printStackTrace();
@@ -123,6 +130,15 @@ public class MusicService extends Service {
             currentState = STOPPED;
             Log.d(TAG, "停止播放");
         }
+    }
+
+    public void resetMusic(){
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+        currentState = IDLE;
     }
 
     /**
@@ -182,13 +198,7 @@ public class MusicService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        // 释放 MediaPlayer 资源
-        if (mediaPlayer != null) {
-            mediaPlayer.stop();
-            mediaPlayer.release();
-            mediaPlayer = null;
-        }
-        currentState = IDLE;
+        resetMusic();
         Log.d(TAG, "Service 销毁，资源已释放");
     }
 }
