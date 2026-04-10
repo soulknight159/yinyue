@@ -70,14 +70,22 @@ public class PlayMusicActivity extends AppCompatActivity {
             public void onServiceConnected(MusicService service) {
                 //在回调方法中获取具体服务
                 musicService = connectionManager.getService();
+                syncSeekBarProgress();
 
-                //TODO:完善第二次打开页面的播放逻辑
-                if (service.getURL() == null |
-                        !service.getURL().equals(url) |
-                        service.getPlayState() == MusicService.IDLE){
-                    service.stopMusic();
+                if(service.getPlayState() == MusicService.IDLE){
                     service.playMusic(url);
                 }
+
+                if (service.getPlayState() == MusicService.PLAYING |
+                        service.getPlayState() == MusicService.PAUSED){
+                    if (service.getUrl() != null){
+                        if (!service.getUrl().equals(url)){
+                            service.stopMusic();
+                            service.playMusic(url);
+                        }
+                    }
+                }
+
 
                 /**
                  * 调用MusicService的方法设置MediaPlayer监听事件
@@ -103,7 +111,6 @@ public class PlayMusicActivity extends AppCompatActivity {
                 /**
                  * 设置按钮的单机事件监听
                  * getPlayState()获取MusicService服务状态
-                 * IDLE空闲状态时传入地址开始播放并开始同步更新进度条
                  * service.isPlaying()状态暂停或者继续播放
                  */
                 play.setOnClickListener(view1 -> {
@@ -157,6 +164,13 @@ public class PlayMusicActivity extends AppCompatActivity {
         updateSeekBarHandler.post(updateSeekBarRunnable);
     }
 
+    private void syncSeekBarProgress() {
+        if (connectionManager.isServiceBound() && musicService != null) {
+            seekBar.setMax(musicService.getDuration());
+            seekBar.setProgress(musicService.getCurrentPosition());
+        }
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -167,6 +181,7 @@ public class PlayMusicActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        updateSeekBarHandler.removeCallbacks(updateSeekBarRunnable);
     }
 
     @Override

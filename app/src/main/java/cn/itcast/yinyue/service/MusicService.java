@@ -14,11 +14,7 @@ public class MusicService extends Service {
     private static final String TAG = "MusicService";
     private final BaseServiceBinder<MusicService> binder = new BaseServiceBinder<>(this);
     MediaPlayer mediaPlayer;
-
-    String URL;
-    public String getURL() {
-        return URL;
-    }
+    String url;
     OnMusicStateListener mStateListener;
 
     public static final int IDLE = 0;     // 空闲
@@ -45,7 +41,9 @@ public class MusicService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         return super.onStartCommand(intent, flags, startId);
     }
-
+    public String getUrl() {
+        return url;
+    }
     public void setOnMusicStateListener(OnMusicStateListener listener) {
         this.mStateListener = listener;
     }
@@ -87,11 +85,10 @@ public class MusicService extends Service {
 
     public void playMusic(String path) {
         if (mediaPlayer == null) return;
-        if (path.equals(URL)) return;
-        URL = path;
         try {
             mediaPlayer.reset();
-            mediaPlayer.setDataSource(URL);
+            mediaPlayer.setDataSource(path);
+            url=path;
             mediaPlayer.prepareAsync();
         } catch (IOException e) {
             e.printStackTrace();
