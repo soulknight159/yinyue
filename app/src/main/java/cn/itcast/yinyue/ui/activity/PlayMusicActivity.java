@@ -82,6 +82,7 @@ public class PlayMusicActivity extends AppCompatActivity {
                 syncSeekBarProgress();
 
                 if(service.getPlayState() == MusicService.IDLE){
+                    //TODO: 广播通知其他组件改变状态
                     service.playMusic(music);
                 }
 
@@ -122,6 +123,7 @@ public class PlayMusicActivity extends AppCompatActivity {
                  * service.isPlaying()状态暂停或者继续播放
                  */
                 play.setOnClickListener(view1 -> {
+                    //TODO: 广播通知其他组件改变状态
                     if (service.isPlaying()){
                         service.pauseMusic();   //暂停播放
 //                        play.setImageResource(R.drawable.ic_play);

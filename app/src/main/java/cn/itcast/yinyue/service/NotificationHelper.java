@@ -66,7 +66,8 @@ public class NotificationHelper {
                 .setContentTitle(title)
                 .setContentText(content)
                 .setOngoing(true)       // 常驻通知
-                .setAutoCancel(false)   // 点击不消失
+                .setAutoCancel(false)
+                .setContentIntent(pendingIntent)// 点击不消失
                 .setPriority(NotificationCompat.PRIORITY_LOW) // 不打扰
                 .build();
     }

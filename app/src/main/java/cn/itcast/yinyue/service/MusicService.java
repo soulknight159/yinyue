@@ -14,6 +14,7 @@ import java.io.IOException;
 
 import cn.itcast.yinyue.bean.Music;
 import cn.itcast.yinyue.consts.Consts;
+import cn.itcast.yinyue.ui.activity.PlayMusicActivity;
 
 public class MusicService extends Service {
     private static final String TAG = "MusicService";
@@ -71,6 +72,7 @@ public class MusicService extends Service {
 
         // 1. 播放完成
         mediaPlayer.setOnCompletionListener(mp -> {
+            //TODO: 单曲循环，列表随机，列表循环
             currentState = STOPPED;
             if (mStateListener != null) {
                 mStateListener.onCompletion(mp);
@@ -109,10 +111,23 @@ public class MusicService extends Service {
         try {
             mediaPlayer.reset();
             this.music = music;
+            Intent playIntent = new Intent(this, PlayMusicActivity.class);
+            playIntent.putExtra("music", this.music);
+            playIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                flags |= PendingIntent.FLAG_IMMUTABLE;
+            }
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                    this,
+                    Consts.FOREGROUND_NOTIFICATION_ID,
+                    playIntent,
+                    flags
+            );
             Notification notification = notificationHelper.createForegroundNotification(
                     music.getTitle(),
                     "正在播放："+music.getTitle(),
-                    null);
+                    pendingIntent);
             notificationHelper.showNormalNotification(Consts.FOREGROUND_NOTIFICATION_ID, notification);
             if (music.getFileUrl().startsWith("audio")){
                 mediaPlayer.setDataSource(Consts.BASE_URL + music.getFileUrl());
