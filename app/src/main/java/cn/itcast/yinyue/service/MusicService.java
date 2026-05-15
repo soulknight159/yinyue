@@ -3,9 +3,13 @@ package cn.itcast.yinyue.service;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ServiceInfo;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -13,6 +17,7 @@ import android.util.Log;
 import java.io.IOException;
 
 import cn.itcast.yinyue.bean.Music;
+import cn.itcast.yinyue.broadcast.MyBroadcastReceiver;
 import cn.itcast.yinyue.consts.Consts;
 import cn.itcast.yinyue.ui.activity.PlayMusicActivity;
 
@@ -23,6 +28,8 @@ public class MusicService extends Service {
     Music music;
     OnMusicStateListener mStateListener;
     NotificationHelper notificationHelper;
+    IntentFilter filter;
+    BroadcastReceiver broadcastReceiver;
 
     public static final int IDLE = 0;     // 空闲
     public static final int PLAYING = 1;  // 播放中
@@ -43,22 +50,15 @@ public class MusicService extends Service {
         Log.d(TAG, "onCreate: MusicService");
         mediaPlayer = new MediaPlayer();
         initMediaPlayerListener();
-        // 创建音乐播放通知
         notificationHelper = NotificationHelper.getInstance(this);
-        Notification notification = notificationHelper.createForegroundNotification(
-                "播放",
-                "正在播放:",
-                null
-        );
+        broadcastReceiver = new MyBroadcastReceiver();
+        filter = new IntentFilter();
+        filter.addAction(Consts.BROADCAST_ACTION_FLAG);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                    Consts.FOREGROUND_NOTIFICATION_ID,
-                    notification,
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-            );
+            registerReceiver(broadcastReceiver,filter, Context.RECEIVER_NOT_EXPORTED);
         } else {
             // 旧版本
-            startForeground(Consts.FOREGROUND_NOTIFICATION_ID, notification);
+            registerReceiver(broadcastReceiver,filter);
         }
     }
     @Override
@@ -106,37 +106,60 @@ public class MusicService extends Service {
         });
     }
 
+    private Notification bulidNotification(){
+        Intent mainIntent = new Intent(this, MusicService.class);
+        Intent playIntent = new Intent(this, PlayMusicActivity.class);
+        Intent[] intents = {playIntent,mainIntent};
+        playIntent.putExtra("musicItem", this.music);
+        playIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pendingIntent = PendingIntent.getActivities(
+                this,
+                Consts.FOREGROUND_NOTIFICATION_ID,
+                intents,
+                flags
+        );
+        Notification notification = notificationHelper.createForegroundNotification(
+                "播放中",
+                "正在播放:" + music.getTitle(),
+                pendingIntent
+        );
+        return notification;
+    }
+
+    public void upgradeToForegroundService(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                    Consts.FOREGROUND_NOTIFICATION_ID,
+                    bulidNotification(),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+            );
+        } else {
+            // 旧版本
+            startForeground(Consts.FOREGROUND_NOTIFICATION_ID, bulidNotification());
+        }
+    }
+
     public void playMusic(Music music) {
         if (mediaPlayer == null) return;
         try {
             mediaPlayer.reset();
             this.music = music;
-            Intent playIntent = new Intent(this, PlayMusicActivity.class);
-            playIntent.putExtra("music", this.music);
-            playIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                flags |= PendingIntent.FLAG_IMMUTABLE;
+            notificationHelper.showNormalNotification(Consts.FOREGROUND_NOTIFICATION_ID, bulidNotification());
+            //判断是否为网络音乐
+            if (music.isNetwork()){
+                mediaPlayer.setDataSource(Consts.BASE_URL + music.getUrl());
             }
-            PendingIntent pendingIntent = PendingIntent.getActivity(
-                    this,
-                    Consts.FOREGROUND_NOTIFICATION_ID,
-                    playIntent,
-                    flags
-            );
-            Notification notification = notificationHelper.createForegroundNotification(
-                    music.getTitle(),
-                    "正在播放："+music.getTitle(),
-                    pendingIntent);
-            notificationHelper.showNormalNotification(Consts.FOREGROUND_NOTIFICATION_ID, notification);
-            if (music.getFileUrl().startsWith("audio")){
-                mediaPlayer.setDataSource(Consts.BASE_URL + music.getFileUrl());
-            }else {
-                mediaPlayer.setDataSource(music.getFileUrl());
+
+            if (music.isLocal()){
+                Uri uri = Uri.parse(music.getPath());
+                mediaPlayer.setDataSource(this, uri);
             }
             mediaPlayer.prepareAsync();
         } catch (IOException e) {
-            e.printStackTrace();
             Log.e(TAG, "播放失败：" + e.getMessage());
         }
     }
@@ -229,7 +252,7 @@ public class MusicService extends Service {
      * 是否正在播放
      */
     public boolean isPlaying() {
-        return mediaPlayer != null && mediaPlayer.isPlaying();
+        return (mediaPlayer != null && mediaPlayer.isPlaying());
     }
 
     public interface OnMusicStateListener {
@@ -246,6 +269,7 @@ public class MusicService extends Service {
     public void onDestroy() {
         super.onDestroy();
         resetMusic();
+        unregisterReceiver(broadcastReceiver);
         Log.d(TAG, "Service 销毁，资源已释放");
     }
 }

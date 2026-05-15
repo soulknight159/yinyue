@@ -7,6 +7,6 @@ public final class Consts {
     public static final String CHANNEL_ID_NORMAL = "channel_normal";
     public static final String CHANNEL_NAME_NORMAL = "普通通知";
     public static final String CHANNEL_DESC_NORMAL = "应用常规消息通知";
-    // 通知默认ID
-    public static final int NOTIFICATION_ID_NORMAL = 100;
+    public static final int NOTIFICATION_ID_NORMAL = 100;   // 通知默认ID
+    public static final String BROADCAST_ACTION_FLAG = "cn.itcast.yin.yue.BROADCAST_ACTION";
 }

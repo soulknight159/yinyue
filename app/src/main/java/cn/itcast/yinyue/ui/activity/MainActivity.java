@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +17,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import org.w3c.dom.Text;
 
 import cn.itcast.yinyue.service.MusicService;
 import cn.itcast.yinyue.service.ServiceConnectionManager;
@@ -34,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private final Fragment mineFragment = new MineFragment();
     private Fragment currentFragment = netMusicFragment;
     ImageButton play;
+    TextView name;
     private String[] permissions = {
             Manifest.permission.READ_MEDIA_AUDIO,
             Manifest.permission.INTERNET,
@@ -56,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         connectionManager = ServiceConnectionManager.getInstance();
 
         play = findViewById(R.id.playOrStop);
+        name = findViewById(R.id.main_name);
 
         play.setOnClickListener(view -> {
             if (connectionManager.getService() != null &&
@@ -68,6 +73,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        if (connectionManager.getService() != null &&
+                connectionManager.isServiceBound()){
+            MusicService service = connectionManager.getService();
+            name.setText(service.getMusic().getTitle());
+        }
 
         PermissionUtils.requestPermissions(this, permissions, new PermissionCallback() {
             @Override

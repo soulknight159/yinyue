@@ -20,7 +20,7 @@ public class NotificationHelper {
     private final Context mContext;
     private final NotificationManagerCompat mNotificationManager;
     private NotificationHelper(Context context) {
-        // 必须用 ApplicationContext 防止内存泄漏
+        // 用 ApplicationContext 防止内存泄漏
         this.mContext = context.getApplicationContext();
         this.mNotificationManager = NotificationManagerCompat.from(mContext);
         createAllChannels();

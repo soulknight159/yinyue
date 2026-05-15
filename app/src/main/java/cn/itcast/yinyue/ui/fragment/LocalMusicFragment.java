@@ -14,11 +14,11 @@ import androidx.fragment.app.Fragment;
 
 import java.util.List;
 
-import cn.itcast.yinyue.untils.GetMusicUtil;
 import cn.itcast.yinyue.bean.Music;
 import cn.itcast.yinyue.ui.MusicListAdapter;
 import cn.itcast.yinyue.R;
 import cn.itcast.yinyue.ui.activity.PlayMusicActivity;
+import cn.itcast.yinyue.untils.LocalMusicFile;
 
 
 public class LocalMusicFragment extends Fragment {
@@ -36,13 +36,13 @@ public class LocalMusicFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        musicList = GetMusicUtil.getMusic(view.getContext());
+        musicList = LocalMusicFile.getLoadMusic(view.getContext());
         musiclistView = view.findViewById(R.id.list_music);
         musicListAdapter = new MusicListAdapter(musicList, view.getContext());
         musiclistView.setAdapter(musicListAdapter);
         musiclistView.setOnItemClickListener((adapterView, view1, i, l) -> {
             Intent intent =new Intent(view.getContext(), PlayMusicActivity.class);
-            intent.putExtra("music",musicList.get(i));
+            intent.putExtra("music",i);
             Log.d(TAG, "listViewItemClick: "+ musicList.get(i).toString());
             startActivity(intent);
         });

@@ -53,12 +53,12 @@ public class MusicListAdapter extends BaseAdapter {
             viewHolder = (ViewHolder) view.getTag();
         }
         // 绑定数据
-        if (list.get(i).getTitle() == null){
-            viewHolder.musicTitle.setText(list.get(i).getFileName());
-        }else {
+        if (list.get(i).getTitle() != null){
             viewHolder.musicTitle.setText(list.get(i).getTitle());
+        }else {
+            viewHolder.musicTitle.setText("未知");
         }
-        viewHolder.singer.setText(list.get(i).getSinger());
+        viewHolder.singer.setText(list.get(i).getArtist());
         return view;
     }
 }

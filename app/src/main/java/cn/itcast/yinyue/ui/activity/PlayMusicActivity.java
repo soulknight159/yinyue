@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -18,20 +19,23 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.ArrayList;
+import java.util.List;
 
 import cn.itcast.yinyue.R;
 import cn.itcast.yinyue.bean.Music;
-import cn.itcast.yinyue.consts.Consts;
 import cn.itcast.yinyue.service.MusicService;
 import cn.itcast.yinyue.service.ServiceConnectionManager;
+import cn.itcast.yinyue.untils.LocalMusicFile;
 
 public class PlayMusicActivity extends AppCompatActivity {
+    private static final String TAG = "PlayMusicActivity";
     TextView name;
     SeekBar seekBar;
-    ImageButton play;
+    ImageButton play,previous,next;
+    int musicId;
     Music music;
+    final List<Music> musicList = new ArrayList<>();
     boolean isDragging = false;
     Handler updateSeekBarHandler=new Handler(Looper.getMainLooper());
     Runnable updateSeekBarRunnable;
@@ -59,11 +63,20 @@ public class PlayMusicActivity extends AppCompatActivity {
 
         seekBar=findViewById(R.id.seekBar);
         play=findViewById(R.id.playOrStop);
-        name=findViewById(R.id.name);
+        previous = findViewById(R.id.previous);
+        next = findViewById(R.id.next);
+        name=findViewById(R.id.play_name);
 
         Intent intentData=getIntent();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            music = intentData.getSerializableExtra("music",Music.class);
+        musicId = intentData.getIntExtra("music",-1);
+        if(musicId >= 0){
+            musicList.clear();
+            musicList.addAll(LocalMusicFile.getLoadMusic(this));
+            music = musicList.get(musicId);
+        }else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                music = intentData.getSerializableExtra("musicItem" ,Music.class);
+            }
         }
 
         /**
@@ -79,13 +92,17 @@ public class PlayMusicActivity extends AppCompatActivity {
             public void onServiceConnected(MusicService service) {
                 //在回调方法中获取具体服务
                 musicService = connectionManager.getService();
-                syncSeekBarProgress();
 
+                if (connectionManager.isServiceBound() && musicService != null) {
+                    seekBar.setMax(musicService.getDuration());
+                    seekBar.setProgress(musicService.getCurrentPosition());
+                }
                 if(service.getPlayState() == MusicService.IDLE){
                     //TODO: 广播通知其他组件改变状态
                     service.playMusic(music);
+                    //升级为前台服务
+                    service.upgradeToForegroundService();
                 }
-
                 if (service.getPlayState() == MusicService.PLAYING |
                         service.getPlayState() == MusicService.PAUSED){
                     if (service.getMusic() != null){
@@ -95,6 +112,12 @@ public class PlayMusicActivity extends AppCompatActivity {
                         }
                     }
                 }
+                if (service.getPlayState() == MusicService.PLAYING) {
+                    play.setImageResource(R.drawable.pause_circle);
+                } else if (service.getPlayState() == MusicService.PAUSED) {
+                    play.setImageResource(R.drawable.play_track_circle);
+                }
+                name.setText(music.getTitle());
 
                 /**
                  * 调用MusicService的方法设置MediaPlayer监听事件
@@ -122,14 +145,36 @@ public class PlayMusicActivity extends AppCompatActivity {
                  * getPlayState()获取MusicService服务状态
                  * service.isPlaying()状态暂停或者继续播放
                  */
-                play.setOnClickListener(view1 -> {
+                play.setOnClickListener(view -> {
                     //TODO: 广播通知其他组件改变状态
                     if (service.isPlaying()){
                         service.pauseMusic();   //暂停播放
-//                        play.setImageResource(R.drawable.ic_play);
+                        play.setImageResource(R.drawable.play_track_circle);
                     }else {
                         service.resumeMusic();  //继续播放
-//                        play.setImageResource(R.drawable.ic_pause);
+                        play.setImageResource(R.drawable.pause_circle);
+                    }
+                });
+
+                previous.setOnClickListener(view -> {
+                    if ((musicId - 1) >= 0){
+                        musicId = musicId - 1;
+                        music = musicList.get(musicId);
+                        service.stopMusic();
+                        service.playMusic(music);
+                        Log.d(TAG, "previous: " + music.toString());
+                        name.setText(music.getTitle());
+                    }
+                });
+
+                next.setOnClickListener(view -> {
+                    if ((musicId + 1) < musicList.size()){
+                        musicId = musicId + 1;
+                        music = musicList.get(musicId);
+                        service.stopMusic();
+                        service.playMusic(music);
+                        Log.d(TAG, "next: " + music.toString());
+                        name.setText(music.getTitle());
                     }
                 });
 
@@ -174,13 +219,6 @@ public class PlayMusicActivity extends AppCompatActivity {
             }
         };
         updateSeekBarHandler.post(updateSeekBarRunnable);
-    }
-
-    private void syncSeekBarProgress() {
-        if (connectionManager.isServiceBound() && musicService != null) {
-            seekBar.setMax(musicService.getDuration());
-            seekBar.setProgress(musicService.getCurrentPosition());
-        }
     }
 
     @Override

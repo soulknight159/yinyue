@@ -1,65 +1,39 @@
 package cn.itcast.yinyue.bean;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 public class Music implements Serializable {
-    Integer id;
-    String fileName;
-    String title;
-    int duration;
-    String singer;
-    String album;
-    String type;
-    String size;
-    String fileUrl;
-
-    public String getAlbum() {
-        return album;
+    // ========== 原有字段 ==========
+    private Integer id;          // 本地音乐在 MediaStore 中的 _id，网络音乐可为 null
+    private String title;        // 歌曲标题
+    private Long duration;    // 时长（毫秒）
+    private String artist;       // 艺术家
+    private String album;        // 专辑
+    private String type;         // 文件类型（如 "mp3"），可保留用于本地
+    private Long size;         // 文件大小（字符串形式）
+    private String path;         // 本地路径 或 Content Uri 字符串（本地音乐使用）
+    private String url;          // 网络音乐的 URL（在线播放地址）
+    private int sourceType;      // 来源类型：0 = 本地，1 = 网络
+    public boolean isLocal() {
+        return sourceType == 0;
     }
 
-    public void setAlbum(String album) {
-        this.album = album;
+    public boolean isNetwork() {
+        return sourceType == 1;
     }
 
-    public int getDuration() {
-        return duration;
+    // 获取可用的数据源字符串（本地返回 path，网络返回 url）
+    public String getDataSource() {
+        return isLocal() ? path : url;
     }
 
-    public void setDuration(int duration) {
-        this.duration = duration;
+    // ========== Getter / Setter ==========
+    public Integer getId() {
+        return id;
     }
 
-    public String getFileUrl() {
-        return fileUrl;
-    }
-
-    public void setFileUrl(String fileUrl) {
-        this.fileUrl = fileUrl;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public String getSinger() {
-        return singer;
-    }
-
-    public void setSinger(String singer) {
-        this.singer = singer;
-    }
-
-    public String getSize() {
-        return size;
-    }
-
-    public void setSize(String size) {
-        this.size = size;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getTitle() {
@@ -70,6 +44,30 @@ public class Music implements Serializable {
         this.title = title;
     }
 
+    public Long getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Long duration) {
+        this.duration = duration;
+    }
+
+    public String getArtist() {
+        return artist;
+    }
+
+    public void setArtist(String artist) {
+        this.artist = artist;
+    }
+
+    public String getAlbum() {
+        return album;
+    }
+
+    public void setAlbum(String album) {
+        this.album = album;
+    }
+
     public String getType() {
         return type;
     }
@@ -78,48 +76,35 @@ public class Music implements Serializable {
         this.type = type;
     }
 
-    public Integer getId() {
-        return id;
+    public Long getSize() {
+        return size;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setSize(Long size) {
+        this.size = size;
     }
 
-    @Override
-    public String toString() {
-        return "Music{" +
-                "album='" + album + '\'' +
-                ", id=" + id +
-                ", fileName='" + fileName + '\'' +
-                ", title='" + title + '\'' +
-                ", duration=" + duration +
-                ", singer='" + singer + '\'' +
-                ", type='" + type + '\'' +
-                ", size='" + size + '\'' +
-                ", fileUrl='" + fileUrl + '\'' +
-                '}';
+    public String getPath() {
+        return path;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Music music = (Music) o;
-        return duration == music.duration && Objects.equals(id, music.id) && Objects.equals(fileName, music.fileName) && Objects.equals(title, music.title) && Objects.equals(singer, music.singer) && Objects.equals(album, music.album) && Objects.equals(type, music.type) && Objects.equals(size, music.size) && Objects.equals(fileUrl, music.fileUrl);
+    public void setPath(String path) {
+        this.path = path;
     }
 
-    @Override
-    public int hashCode() {
-        int result = Objects.hashCode(id);
-        result = 31 * result + Objects.hashCode(fileName);
-        result = 31 * result + Objects.hashCode(title);
-        result = 31 * result + duration;
-        result = 31 * result + Objects.hashCode(singer);
-        result = 31 * result + Objects.hashCode(album);
-        result = 31 * result + Objects.hashCode(type);
-        result = 31 * result + Objects.hashCode(size);
-        result = 31 * result + Objects.hashCode(fileUrl);
-        return result;
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public int getSourceType() {
+        return sourceType;
+    }
+
+    public void setSourceType(int sourceType) {
+        this.sourceType = sourceType;
     }
 }

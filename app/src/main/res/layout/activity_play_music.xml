@@ -34,13 +34,13 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/previous"
             android:layout_width="75dp"
             android:layout_height="75dp"
             android:layout_weight="1"
             android:background="@color/white"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_prev" />
+            app:srcCompat="@drawable/previous_track" />
 
         <ImageButton
             android:id="@+id/playOrStop"
@@ -49,16 +49,16 @@
             android:layout_weight="1"
             android:background="@color/white"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_play" />
+            app:srcCompat="@drawable/pause_circle" />
 
         <ImageButton
-            android:id="@+id/imageButton3"
+            android:id="@+id/next"
             android:layout_width="75dp"
             android:layout_height="75dp"
             android:layout_weight="1"
             android:background="@color/white"
             android:scaleType="fitCenter"
-            app:srcCompat="@drawable/ic_next" />
+            app:srcCompat="@drawable/next_track" />
     </LinearLayout>
 
     <SeekBar
@@ -73,7 +73,7 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
-        android:id="@+id/name"
+        android:id="@+id/play_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
